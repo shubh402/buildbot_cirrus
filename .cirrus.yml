@@ -1,0 +1,45 @@
+task:
+  name: "Radiant"
+  timeout_in: 240m  
+  container:
+      image: stupidkidaf/kernel_docker:v1
+      cpu: 4
+      memory: 8G
+      
+  Sync_script:
+      - cd ~
+      - mkdir rom
+      - cd rom
+      - repo init --depth=1 --no-repo-verify -u https://github.com/PixelExperience/manifest -b twelve -g default,-mips,-darwin,-notdefault
+      - git clone https://github.com/Imshubh69/local_manifest --depth 1 -b main .repo/local_manifests
+      - repo sync -c --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j$(nproc --all)
+
+  Build_script: 
+      - export ALLOW_MISSING_DEPENDENCIES=true
+      - cd ~
+      - cd rom
+      - export BUILD_BROKEN_DUP_RULES=true
+      - export USE_CCACHE=1 >> ~/.bashrc
+      - ccache -M 40G
+      - . build/envsetup.sh
+      - lunch aosp_moon-userdebug
+      - mka bacon
+
+  Upload_script:
+      - echo "============================"
+      - echo "Uploading the Build..."
+      - echo "============================"
+      - cd ~
+      - cd rom
+      - cd out/target/product/selene
+      - ls -lh
+      - pwd
+      - chmod 777 *
+      - curl --upload-file V*.zip https://transfer.sh
+      - echo " "
+      - echo "============================"
+      - echo "Build Uploaded!"
+      - echo "Please see the link Below-  "
+      - echo "----------------------------"
+      - cat link.txt && echo " "
+      - echo "============================"
